@@ -12,6 +12,8 @@
   "dependencies": {
     "@react-sigma/core": "^5.0.4",
     "@react-sigma/layout-circular": "^5.0.4",
+    "@react-sigma/layout-forceatlas2": "^5.0.4",
+    "@react-sigma/layout-noverlap": "^5.0.4",
     "@tailwindcss/vite": "^4.1.8",
     "graphology": "^0.26.0",
     "graphology-types": "^0.24.8",
