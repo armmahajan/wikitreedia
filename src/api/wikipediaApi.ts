@@ -1,91 +1,89 @@
-import { Mutex } from 'async-mutex';
+import type { WikiBatchStatsResponse, WikiBatchStatsPages  } from "../models/WikipediaApi";
+import { MaxHeap, IGetCompareValue } from 'datastructures-js'
 
 export async function fetchArticleLinks(articleName: string) {
-  encodedArticleName = encodeURIComponent(articleName['*'].replace(/ /g, '_'))
-  let parseJson = null
-
+  let encodedArticleName = encodeURIComponent(articleName.replace(/ /g, '_'))
+  console.log(encodedArticleName)
   const res = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=${encodedArticleName}&prop=links&format=json&origin=*`)
   const parseJson = await res.json();
   
   if (parseJson) {
-    const linksArray = parseJson.parse.links; 
+    // @TODO: linksArray data model
+    const linksArray = parseJson.parse.links
+    const encodedLinks = linksArray.map((item) => {
+      return encodeURIComponent(item['*'].replace(/ /g, '_'))
+    })
+    return encodedLinks;
   } else {
-    console.error('Could not fetch article links.')
+    console.error('Could not fetch article links.');
   }
 }
 
-export async function fetchArticleBatch(articleList: list) {
-  // Get results for this batch
-  const res = await fetch(`https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageviews&titles=${articleList}&format=json`)        
-  const stats = await res.json()
-  // TODO: add async mutex for heap pushes
-  const mutex = new Mutex()
+export async function fetchBatchStats(articleList: string[]): Promise<WikiBatchStatsPages | null> {
+  // Preconditions
+  if (articleList.length > 50) {
+    console.error(`Article batch is too long (Length: ${articleList.length})`)
+    return null
+  }
+
+  // Get results for batch
+  let encodedArticleList = articleList.map(articleName => {return encodeURIComponent(articleName.replace(/ /g, '_'))})
+  let batchString = encodedArticleList.join('|')
+  const res = await fetch(`https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageviews&titles=${batchString}&format=json`)
+  const stats: WikiBatchStatsResponse = await res.json()
+  return stats.query.pages
 }
 
-export async function fetchTopArticles(numArticles: number = 200) {
-  function* batchArray<T>(array: T[], batchSize: number): Generator<T[]> {
+export async function fetchTopArticles(articles: string[], numArticles: number = 200) {
+  function* batchArray<T>(array: T[], batchSize: number = 50): Generator<T[]> {
     for (let i = 0; i < array.length; i += batchSize) {
       yield array.slice(i, i + batchSize);
     }
   }
+  
+  type articleViews = {
+    title: string,
+    views: number
+  }
+  const getViewsCompareValue: IGetCompareValue<Number> = (article: articleViews) => {
+     return article.views
+  }
+  const viewsHeap = new MaxHeap<articleViews>(getViewsCompareValue)
 
-  let viewArticleMap = {}
-  for (let batch of batchArray(encodedLinks, 50)) {
-    let articleList = batch.join('|')
-    fetch(`https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageviews&titles=${articleList}&format=json`)        
-      .then(res => res.json())
-      .then(setStats)
-    if (stats) {
-      const pageIds = Object.keys(stats.query.pages)
-        const pages = stats.query.pages
-        for (let pageId of pageIds) {
-          const page = pages[pageId]
-          const pageViews = page.pageviews
-          const dates = Object.keys(pageViews)
-          dates.sort().pop()
-          const latest = dates.pop()
-          const viewCount = pageViews[latest]
-          if (!viewArticleMap[viewCount]) {
-            viewArticleMap[viewCount] = [page.title]
-          }
-          else {
-            viewArticleMap[viewCount].push(page.title)
-          }
-          // TODO: Filter by Template: and Wikipedia:
-        }
-      }
+  for (let batch of batchArray(articles)) {
+    let res = await fetchBatchStats(batch)
+    let yesterday = getYesterdayDateString()
+    if (res) {
+      let stats = Object.values(res)
+      let mostRecentViews = stats.map((stat) => {
+        const title = stat['title']
+        const views: number = stat?.pageviews?.[yesterday] ?? -1
+        return { 'title': title, 'views': views}
+      })
+      mostRecentViews.forEach((view) => viewsHeap.insert(view))
     }
-    
+  }
 
+  // Get top 200 from heap
+  let top200 = []
+  let count = 200
+  while (count > 0 && !viewsHeap.isEmpty()) {
+    top200.push(viewsHeap.pop())
+    count--
+  }
+
+  return top200
 }
 
+function getYesterdayDateString(): string {
+  const today = new Date();
+  const yesterday = new Date(today);
 
+  yesterday.setDate(today.getDate() - 1);
 
+  const year = yesterday.getFullYear();
+  const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+  const day = String(yesterday.getDate()).padStart(2, '0');
 
-    
-useEffect(() => {
-  const graph = new Graph();
-  graph.addNode("Albert Einstein", {x: 1, y: 0, size: 5, color: "#FFFFFF", label: 'Albert Einstein', labelColor: '#00FFFF'})
-
-  // const linksArray = parseJson ? parseJson.parse.links : [];
-  // const encodedLinks = linksArray.map(item => {
-  //   return encodeURIComponent(item['*'].replace(/ /g, '_'))
-  // })
-
-  
-
-
-
-  let base = 0;
-    for (let link of linksArray) {
-      graph.addNode(link['*'], {x: base, y: base, size: 5, color: "#FFFFFF", label: link['*']})
-      graph.addEdge('Albert Einstein', link['*'])
-      base++;
-    }
-    
-    loadGraph(graph);
-    assign();
-  }, [loadGraph, assign])
-
-  return null 
+  return `${year}-${month}-${day}`;
 }
