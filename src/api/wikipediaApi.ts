@@ -1,9 +1,9 @@
 import type { WikiBatchStatsResponse, WikiBatchStatsPages  } from "../models/WikipediaApi";
-import { MaxHeap, IGetCompareValue } from 'datastructures-js'
+import { MaxHeap } from 'datastructures-js'
+import type { IGetCompareValue } from 'datastructures-js'
 
-export async function fetchArticleLinks(articleName: string) {
+export async function fetchArticleLinks(articleName: string): Promise<string[] | null> {
   let encodedArticleName = encodeURIComponent(articleName.replace(/ /g, '_'))
-  console.log(encodedArticleName)
   const res = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=${encodedArticleName}&prop=links&format=json&origin=*`)
   const parseJson = await res.json();
   
@@ -13,9 +13,11 @@ export async function fetchArticleLinks(articleName: string) {
     const encodedLinks = linksArray.map((item) => {
       return encodeURIComponent(item['*'].replace(/ /g, '_'))
     })
+    console.log(encodedLinks)
     return encodedLinks;
   } else {
     console.error('Could not fetch article links.');
+    return null
   }
 }
 
@@ -34,7 +36,7 @@ export async function fetchBatchStats(articleList: string[]): Promise<WikiBatchS
   return stats.query.pages
 }
 
-export async function fetchTopArticles(articles: string[], numArticles: number = 200) {
+export async function fetchTopArticles(articles: string[], numArticles: number = 200): Promise<{title: string, views: number}[]> {
   function* batchArray<T>(array: T[], batchSize: number = 50): Generator<T[]> {
     for (let i = 0; i < array.length; i += batchSize) {
       yield array.slice(i, i + batchSize);
