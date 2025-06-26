@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "@react-sigma/core": "^5.0.4",
     "@react-sigma/layout-circular": "^5.0.4",
     "@react-sigma/layout-forceatlas2": "^5.0.4",

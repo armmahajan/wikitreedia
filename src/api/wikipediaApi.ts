@@ -9,11 +9,10 @@ export async function fetchArticleLinks(articleName: string): Promise<string[] |
   
   if (parseJson) {
     // @TODO: linksArray data model
-    const linksArray = parseJson.parse.links
+    const linksArray = parseJson?.parse?.links ?? []
     const encodedLinks = linksArray.map((item) => {
       return encodeURIComponent(item['*'].replace(/ /g, '_'))
     })
-    console.log(encodedLinks)
     return encodedLinks;
   } else {
     console.error('Could not fetch article links.');
@@ -88,4 +87,10 @@ function getYesterdayDateString(): string {
   const day = String(yesterday.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+}
+
+export async function fetchWikiSearchResults(query: string): Promise<string[]> {
+  const res = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=10&namespace=0&format=json&origin=*`)  
+  const resJson: string[][] = await res.json()
+  return resJson[1] ? resJson[1] : []
 }

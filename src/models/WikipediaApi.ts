@@ -14,3 +14,4 @@ export interface WikiBatchStatsResponse {
 }
 
 export type WikiBatchStatsPages = WikiBatchStatsResponse['query']['pages']
+
