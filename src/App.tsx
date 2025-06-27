@@ -14,7 +14,6 @@ import { fetchArticleLinks, fetchTopArticles, fetchWikiSearchResults } from './a
   * Todo:
   *   - Node color gradient based on number of edges
   *   - Customizing settings VERY LOW
-  *   - Autocomplete HIGH
   *   - Hover events HIGH
   *     - ALL LOW
   *     - For node hover, option to pull up that graph
@@ -23,7 +22,7 @@ import { fetchArticleLinks, fetchTopArticles, fetchWikiSearchResults } from './a
 */
 
 function App() {
-  // Comobobox state params
+  // Combobox state params
   const [selectedArticle, setSelectedArticle] = useState('')
   const [searchResults, setSearchResults] = useState<string[]>([])
   const [query, setQuery] = useState('')
@@ -35,7 +34,14 @@ function App() {
       if (!results) throw new Error('Unable to fetch autocomplete results.')
       setSearchResults(results)
     }
-    updateCombobox()
+
+    const timeoutId = setTimeout(() => {
+      updateCombobox()
+    }, 200);
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
   }, [query])
   
   // Hooks to allow for dynamic updating of graph data and forceful rerenders
@@ -45,34 +51,28 @@ function App() {
   
   // Updates based on search input
   useEffect(() => {
-    
     if (!selectedArticle) return
 
     const loadArticles = async () => {
       const initialLinks = await fetchArticleLinks(selectedArticle)
-      if (!initialLinks) throw new Error("Could not fetch embeddedLinks of parent article")
+      if (!initialLinks) throw new Error("Could not fetch embedded links of parent article")
 
       // Add parents top articles to graph
       const topArticles = await fetchTopArticles(initialLinks)
       if (!topArticles) throw new Error("Could not sort articles by viewcount")
 
-      let topArticleTitles = []
-      for (const article of topArticles) {
-        if (article) {
-          topArticleTitles.push(article.title)
-        }
-      }
+      const topArticleTitles = topArticles.map((article) => article.title)
       addArticleTree(selectedArticle, topArticleTitles, true)
     
       // Add childrens edges into graph
-      for (const article of topArticles) {
-        const title = article.title
-        const embeddedLinks = await fetchArticleLinks(title)
+      await Promise.all(
+        topArticles.map(async (article) => {
+          const embeddedLinks = await fetchArticleLinks(article.title)
+          if (!embeddedLinks) throw new Error('Could not get embedded links for an article')
 
-        if (embeddedLinks) {
-          addArticleTree(title, embeddedLinks)
-        }
-      }
+          addArticleTree(article.title, embeddedLinks)
+        })
+      )
     }
 
     loadArticles()
@@ -81,7 +81,7 @@ function App() {
   const addNode = (title: string) => {
     const graph = graphRef.current
     if (graph.hasNode(title)) return
-    graph.addNode(title, {x: Math.random(), y: Math.random(), size: 5, color: "#FFFFFF", label: title, labelColor: '#00FFFF'})
+    graph.addNode(title, {x: Math.random(), y: Math.random(), size: 4, label: title, labelColor: '#00FFFF'})
   }
 
   const addEdge = (origin: string, dest: string) => {
@@ -114,20 +114,25 @@ function App() {
   }
 
   const sigmaSettings = {
-    labelRenderedSizeThreshold: 0,
+    labelRenderedSizeThreshold: 1,
     labelFont: "sans-serif",
+    hoverLabelColor: "#050517",
     allowInvalidContainer: true,
-    labelColor: { color: "#000", mode: "default"}
+    labelColor: { color: "#DDD3E0", mode: "default"},
+    defaultEdgeColor: "#548687",
+    defaultNodeColor: "#826C7F",
   }
 
   return (
     <div className='w-[100vw] h-[100vh] flex flex-col'>
       <div className='flex flex-row gap-1 h-8 justify-center absolute top-5 left-5 z-1000'>
         <Combobox value={selectedArticle} onChange={setSelectedArticle} onClose={() => setQuery('')}>
-          <ComboboxInput onChange={(event) => {setQuery(event.target.value)}}>
+          <ComboboxInput 
+            className=""
+            onChange={(event) => {setQuery(event.target.value)}}>
           </ComboboxInput>
-
-          <ComboboxOptions anchor="bottom" className="border empty:invisible">
+          <ComboboxOptions anchor="bottom" 
+            className="">
             {
               searchResults.map((result) => (
                 <ComboboxOption key={result} value={result}>{result}</ComboboxOption>
@@ -137,7 +142,7 @@ function App() {
         </Combobox>
       </div>
       <div className='flex-1/2 bg-black'>
-        <SigmaContainer style={{ backgroundColor: 'darkgrey', color: 'blue'}} settings={sigmaSettings}>
+        <SigmaContainer style={{ backgroundColor: '#1A1B32', color: 'blue'}} settings={sigmaSettings}>
           <LoadGraph/>
         </SigmaContainer>
       </div>
