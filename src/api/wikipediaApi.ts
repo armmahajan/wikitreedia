@@ -4,8 +4,18 @@ import type { IGetCompareValue } from 'datastructures-js'
 
 export async function fetchArticleLinks(articleName: string): Promise<string[] | null> {
   let encodedArticleName = encodeURIComponent(articleName.replace(/ /g, '_'))
-  const res = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=${encodedArticleName}&prop=links&format=json&origin=*`)
-  const parseJson = await res.json();
+  let res;
+  try {
+    res = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=${encodedArticleName}&prop=links&format=json&origin=*`, {
+      headers: {
+        "User-Agent": "Wikitreedia/0.1"
+      }
+    })
+  } catch (err) {
+    if (err.response) console.log("Error response status: ", err.response.status)
+    return null
+  }
+  const parseJson = await res?.json();
   
   if (parseJson) {
     // @TODO: linksArray data model
@@ -30,9 +40,16 @@ export async function fetchBatchStats(articleList: string[]): Promise<WikiBatchS
   // Get results for batch
   let encodedArticleList = articleList.map(articleName => {return encodeURIComponent(articleName.replace(/ /g, '_'))})
   let batchString = encodedArticleList.join('|')
-  const res = await fetch(`https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageviews&titles=${batchString}&format=json`)
-  const stats: WikiBatchStatsResponse = await res.json()
-  return stats.query.pages
+  try {
+    const res = await fetch(`https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageviews&titles=${batchString}&format=json`)
+    const stats: WikiBatchStatsResponse = await res.json()
+    return stats.query.pages
+  } catch (err){
+    if (err.response) {
+      console.log("Error status: ", err.response.status)
+    }
+    return null
+  }
 }
 
 export async function fetchTopArticles(articles: string[], numArticles: number = 200): Promise<{title: string, views: number}[]> {
@@ -90,7 +107,13 @@ function getYesterdayDateString(): string {
 }
 
 export async function fetchWikiSearchResults(query: string): Promise<string[]> {
-  const res = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=10&namespace=0&format=json&origin=*`)  
-  const resJson: string[][] = await res.json()
-  return resJson[1] ? resJson[1] : []
+  let res;
+  try {
+    res = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=10&namespace=0&format=json&origin=*`)  
+    const resJson: string[][] = await res?.json()
+    return resJson[1] ? resJson[1] : []
+  } catch (err) {
+    if (err.response) console.log("Error response status: ", err.response.status)
+    return []
+  }
 }

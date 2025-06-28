@@ -51,7 +51,7 @@ const WikipediaPreview: React.FC<WikipediaPreviewProps> = ({ title }) => {
         absolute left-4 transform
         transition-transform duration-700 ease-out
         ${visible ? 'translate-y-0 bottom-4' : 'translate-y-full bottom-0'}
-        z-1000 w-1/6 h-[40vh] px-2 pb-2 pt-1 bg-[#161618] rounded-lg shadow-2xl">
+        z-1000 min-w-60 w-1/6 h-[40vh] px-2 pb-2 pt-1 bg-[#161618] rounded-lg shadow-2xl">
         `}
       >
         <div className="w-full h-full flex flex-col">
