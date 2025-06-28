@@ -1,31 +1,52 @@
 import { useEffect, useState, useRef } from 'react';
 import './App.css'
-
-import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
-
+import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import Graph from "graphology";
-import { SigmaContainer, useLoadGraph } from "@react-sigma/core";
+import { SigmaContainer, useSigma, useLoadGraph, useRegisterEvents } from "@react-sigma/core";
 import { useLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import "@react-sigma/core/lib/style.css";
 
 import { fetchArticleLinks, fetchTopArticles, fetchWikiSearchResults } from './api/wikipediaApi.ts'
+import { customDrawHover } from './renderers/drawHover.ts'
+
+import WikipediaPreview from './components/WikipediaPreview.tsx'
+
+function ClickEvents({ onNodeClick }: { onNodeClick: (label: string) => void}) {
+  const registerEvents = useRegisterEvents()
+  const sigma = useSigma();
+  const graph = sigma.getGraph()
+  useEffect(() => {
+    registerEvents({
+      clickNode: (e) => {
+        const nodeKey = e.node
+        const label = graph.getNodeAttribute(nodeKey, "label")
+        onNodeClick(label)
+      }
+    })
+  }, [])
+
+  return null
+}
 
 /*
+  * GOAL: Add preview on click, style, deploy (also fix rerendering)
   * Todo:
-  *   - Node color gradient based on number of edges
   *   - Customizing settings VERY LOW
   *   - Hover events HIGH
   *     - ALL LOW
   *     - For node hover, option to pull up that graph
+  *       - probably easier to add other div that contains preview
+  *       - Could do: Click -> Preview + button to pull up that graph instead
   *     - could we hide the current data in the back and just add on?
   *     - if we hover certain nodes can we hide other nodes in the back?
 */
 
 function App() {
   // Combobox state params
-  const [selectedArticle, setSelectedArticle] = useState('')
+  const [selectedArticle, setSelectedArticle] = useState<string | null>('')
   const [searchResults, setSearchResults] = useState<string[]>([])
   const [query, setQuery] = useState('')
+  const [previewArticle, setPreviewArticle] = useState<string>('')
 
   // Update search results
   useEffect(() => {
@@ -99,6 +120,7 @@ function App() {
     forceUpdate()
   }
 
+
   const LoadGraph = () => {
     const { assign } = useLayoutForceAtlas2();
     const loadGraph = useLoadGraph();
@@ -113,6 +135,8 @@ function App() {
     return null 
   }
 
+
+
   const sigmaSettings = {
     labelRenderedSizeThreshold: 1,
     labelFont: "sans-serif",
@@ -121,12 +145,20 @@ function App() {
     labelColor: { color: "#DDD3E0", mode: "default"},
     defaultEdgeColor: "#548687",
     defaultNodeColor: "#826C7F",
+    defaultDrawNodeHover: customDrawHover
   }
 
   return (
-    <div className='w-[100vw] h-[100vh] flex flex-col'>
+    <div className='w-[100vw] h-[100vh] flex flex-col relative overflow-x-hidden overflow-y-hidden'>
+      <WikipediaPreview title={previewArticle}/>
       <div className='flex flex-row gap-1 h-8 justify-center absolute top-5 left-5 z-1000'>
-        <Combobox value={selectedArticle} onChange={setSelectedArticle} onClose={() => setQuery('')}>
+        <Combobox value={selectedArticle} 
+          onChange={(value) => {
+            setSelectedArticle(value);
+            const graph = graphRef.current
+            graph.clear()
+          }} 
+          onClose={() => setQuery('')}>
           <ComboboxInput 
             className=""
             onChange={(event) => {setQuery(event.target.value)}}>
@@ -142,8 +174,9 @@ function App() {
         </Combobox>
       </div>
       <div className='flex-1/2 bg-black'>
-        <SigmaContainer style={{ backgroundColor: '#1A1B32', color: 'blue'}} settings={sigmaSettings}>
+        <SigmaContainer style={{ backgroundColor: '#16182C', color: 'blue'}} settings={sigmaSettings}>
           <LoadGraph/>
+          <ClickEvents onNodeClick={setPreviewArticle}></ClickEvents>
         </SigmaContainer>
       </div>
     </div>
