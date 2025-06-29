@@ -1,4 +1,4 @@
-wikitreedia.com {
+www.wikitreedia.com wikitreedia.com {
     root * /usr/share/caddy
     file_server
 }
