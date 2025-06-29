@@ -18,13 +18,13 @@ interface WikiExtract {
 const WikipediaPreview: React.FC<WikipediaPreviewProps> = ({ title }) => {
   const [data, setData] = useState<WikiExtract | null>(null);
   const [visible, setVisible] = useState<boolean>(false)
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     if (!title) return;
 
     const fetchPreview = async () => {
-      setLoading(true);
+      // setLoading(true);
       setVisible(true)
       try {
         const res = await fetch(
@@ -36,7 +36,7 @@ const WikipediaPreview: React.FC<WikipediaPreviewProps> = ({ title }) => {
         console.error("Failed to fetch Wikipedia summary:", e);
         setData(null);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 

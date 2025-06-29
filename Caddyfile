@@ -1,0 +1,4 @@
+wikitreedia.com {
+    root * /usr/share/caddy
+    file_server
+}

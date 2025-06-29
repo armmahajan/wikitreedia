@@ -1,6 +1,5 @@
 import type { WikiBatchStatsResponse, WikiBatchStatsPages  } from "../models/WikipediaApi";
 import { MaxHeap } from 'datastructures-js'
-import type { IGetCompareValue } from 'datastructures-js'
 
 export async function fetchArticleLinks(articleName: string): Promise<string[] | null> {
   let encodedArticleName = encodeURIComponent(articleName.replace(/ /g, '_'))
@@ -11,7 +10,7 @@ export async function fetchArticleLinks(articleName: string): Promise<string[] |
         "User-Agent": "Wikitreedia/0.1"
       }
     })
-  } catch (err) {
+  } catch (err: any) {
     if (err.response) console.log("Error response status: ", err.response.status)
     return null
   }
@@ -20,7 +19,7 @@ export async function fetchArticleLinks(articleName: string): Promise<string[] |
   if (parseJson) {
     // @TODO: linksArray data model
     const linksArray = parseJson?.parse?.links ?? []
-    const encodedLinks = linksArray.map((item) => {
+    const encodedLinks = linksArray.map((item: any) => {
       return encodeURIComponent(item['*'].replace(/ /g, '_'))
     })
     return encodedLinks;
@@ -44,7 +43,7 @@ export async function fetchBatchStats(articleList: string[]): Promise<WikiBatchS
     const res = await fetch(`https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageviews&titles=${batchString}&format=json`)
     const stats: WikiBatchStatsResponse = await res.json()
     return stats.query.pages
-  } catch (err){
+  } catch (err: any){
     if (err.response) {
       console.log("Error status: ", err.response.status)
     }
@@ -52,33 +51,35 @@ export async function fetchBatchStats(articleList: string[]): Promise<WikiBatchS
   }
 }
 
-export async function fetchTopArticles(articles: string[], numArticles: number = 200): Promise<{title: string, views: number}[]> {
+type articleViews = {
+  title: string,
+  views: number
+}
+
+export async function fetchTopArticles(articles: string[]): Promise<(articleViews | null)[]> {
   function* batchArray<T>(array: T[], batchSize: number = 50): Generator<T[]> {
     for (let i = 0; i < array.length; i += batchSize) {
       yield array.slice(i, i + batchSize);
     }
   }
   
-  type articleViews = {
-    title: string,
-    views: number
-  }
-  const getViewsCompareValue: IGetCompareValue<Number> = (article: articleViews) => {
+  const getViewsCompareValue = (article: articleViews) => {
      return article.views
   }
   const viewsHeap = new MaxHeap<articleViews>(getViewsCompareValue)
 
+  // TODO: fix 'any' typing
   for (let batch of batchArray(articles)) {
     let res = await fetchBatchStats(batch)
     let yesterday = getYesterdayDateString()
     if (res) {
-      let stats = Object.values(res)
-      let mostRecentViews = stats.map((stat) => {
+      let stats: any = Object.values(res)
+      let mostRecentViews = stats.map((stat: any) => {
         const title = stat['title']
         const views: number = stat?.pageviews?.[yesterday] ?? -1
         return { 'title': title, 'views': views}
       })
-      mostRecentViews.forEach((view) => viewsHeap.insert(view))
+      mostRecentViews.forEach((view: any) => viewsHeap.insert(view))
     }
   }
 
@@ -112,7 +113,7 @@ export async function fetchWikiSearchResults(query: string): Promise<string[]> {
     res = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=10&namespace=0&format=json&origin=*`)  
     const resJson: string[][] = await res?.json()
     return resJson[1] ? resJson[1] : []
-  } catch (err) {
+  } catch (err: any) {
     if (err.response) console.log("Error response status: ", err.response.status)
     return []
   }

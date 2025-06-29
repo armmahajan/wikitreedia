@@ -4,7 +4,6 @@ import './App.css'
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import Graph from "graphology";
 import { SigmaContainer, useSigma, useLoadGraph, useRegisterEvents } from "@react-sigma/core";
-import { useLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import { useWorkerLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import "@react-sigma/core/lib/style.css";
 
@@ -86,12 +85,17 @@ function App() {
       const topArticles = await fetchTopArticles(initialLinks)
       if (!topArticles) throw new Error("Could not sort articles by viewcount")
 
-      const topArticleTitles = topArticles.map((article) => article.title)
+      const topArticleTitles = topArticles.map((article) => {
+        if (!article) return ''
+        return article.title
+      })
       addArticleTree(selectedArticle, topArticleTitles, true)
     
       // Add childrens edges into graph
       await Promise.all(
         topArticles.map(async (article) => {
+          if (!article) return
+
           const embeddedLinks = await fetchArticleLinks(article.title)
           if (!embeddedLinks) throw new Error('Could not get embedded links for an article')
 
