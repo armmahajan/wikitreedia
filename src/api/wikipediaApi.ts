@@ -75,7 +75,7 @@ export async function fetchTopArticles(articles: string[]): Promise<(articleView
     if (res) {
       let stats: any = Object.values(res)
       let mostRecentViews = stats.map((stat: any) => {
-        const title = stat['title']
+        const title = decodeURIComponent(stat['title']).replace('_', ' ')
         const views: number = stat?.pageviews?.[yesterday] ?? -1
         return { 'title': title, 'views': views}
       })
