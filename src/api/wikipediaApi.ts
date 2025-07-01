@@ -75,7 +75,9 @@ export async function fetchTopArticles(articles: string[]): Promise<(articleView
     if (res) {
       let stats: any = Object.values(res)
       let mostRecentViews = stats.map((stat: any) => {
+        // Filtering and decoding
         const title = decodeURIComponent(stat['title']).replace('_', ' ')
+
         const views: number = stat?.pageviews?.[yesterday] ?? -1
         return { 'title': title, 'views': views}
       })
@@ -87,7 +89,12 @@ export async function fetchTopArticles(articles: string[]): Promise<(articleView
   let top200 = []
   let count = 200
   while (count > 0 && !viewsHeap.isEmpty()) {
-    top200.push(viewsHeap.pop())
+    const top = viewsHeap.pop()
+    if (top) {
+      const title = top?.title
+      if (title.startsWith('Category:') || title.startsWith('Template:') || title.startsWith('Wikipedia:')) continue
+    }
+    top200.push(top)
     count--
   }
 

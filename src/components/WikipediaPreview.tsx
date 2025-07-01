@@ -43,7 +43,19 @@ const WikipediaPreview: React.FC<WikipediaPreviewProps> = ({ title }) => {
     fetchPreview();
   }, [title]);
 
-  if (!data) return (<div></div>)
+  if (!data) return (
+    <div className={`
+      absolute left-4 transform flex items-center justify-center
+      transition-transform duration-700 ease-out
+      bottom-4
+      z-1000 min-w-60 w-1/6 h-[5vh] px-2 pb-2 pt-1 bg-[#161618] rounded-lg shadow-2xl">
+      `}
+    >
+      <p>
+        Click on a node to view an article preview!
+      </p>
+    </div>
+  )
 
   return (
     <>
@@ -69,7 +81,7 @@ const WikipediaPreview: React.FC<WikipediaPreviewProps> = ({ title }) => {
                 className="w-full object-cover rounded-md pr-1"
               />
             )}
-            <p className="w-full text-sm text-gray-200 text-justify pr-1">{data.extract}</p>
+            <p className="w-full text-sm text-gray-200 text-justify pr-1">{data.extract !== "" ? data.extract : 'No summary found for this article.' }</p>
           </div>
         </div>
       </div>
