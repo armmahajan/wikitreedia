@@ -11,7 +11,7 @@ import { useLocation } from 'react-router'
 
 import { fetchArticleLinks, fetchTopArticles, fetchWikiSearchResults } from './api/wikipediaApi.ts'
 import { customDrawHover } from './renderers/drawHover.ts'
-
+import About from './components/About.tsx'
 import WikipediaPreview from './components/WikipediaPreview.tsx'
 
 const ClickEvents = React.memo(function ClickEvents({ onNodeClick }: { onNodeClick: (label: string) => void}) {
@@ -262,6 +262,7 @@ function App() {
           <AssignGraph/>
         </SigmaContainer>
       </div>
+      <About/>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 
 import { fetchWikiSearchResults } from '../api/wikipediaApi.ts'
+import About from '../components/About.tsx'
 
 function HomePage() {
   const [selectedArticle, setSelectedArticle] = useState<string | null>('')
@@ -67,6 +68,7 @@ function HomePage() {
             </ComboboxOptions>
           </Combobox>
         </div>
+        <About/>
       </div>
     </>
   )

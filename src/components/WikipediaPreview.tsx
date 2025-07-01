@@ -48,7 +48,7 @@ const WikipediaPreview: React.FC<WikipediaPreviewProps> = ({ title }) => {
       absolute left-4 transform flex items-center justify-center
       transition-transform duration-700 ease-out
       bottom-4
-      z-1000 min-w-60 w-1/6 h-[5vh] px-2 pb-2 pt-1 bg-[#161618] rounded-lg shadow-2xl">
+      z-1000 min-w-60 w-1/6 h-10 px-2 pb-2 pt-2 bg-[#161618] rounded-lg shadow-2xl">
       `}
     >
       <p>
