@@ -40,6 +40,7 @@ const ClickEvents = React.memo(function ClickEvents({ onNodeClick }: { onNodeCli
           }
           if (source === nodeKey) {
             graph.setNodeAttribute(target, 'color', '#548687')
+            graph.setEdgeAttribute(key, 'size', 3)
           }
         })
       },
@@ -50,6 +51,7 @@ const ClickEvents = React.memo(function ClickEvents({ onNodeClick }: { onNodeCli
         })
         graph.forEachEdge((key, _, source) => {
           graph.setEdgeAttribute(key, 'color', '#548687')
+          graph.setEdgeAttribute(key, 'size', 1)
         })
       }
     })
