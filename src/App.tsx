@@ -3,7 +3,6 @@ import React from 'react';
 import './App.css'
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import Graph from "graphology";
-import Node from "graphology";
 import { SigmaContainer, useSigma, useLoadGraph, useRegisterEvents } from "@react-sigma/core";
 import { useWorkerLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import "@react-sigma/core/lib/style.css";
@@ -27,7 +26,7 @@ const ClickEvents = React.memo(function ClickEvents({ onNodeClick }: { onNodeCli
       },
       enterNode: (e) => {
         const nodeKey = e.node
-        graph.forEachNode((key, attributes) => {
+        graph.forEachNode((key) => {
           if (key !== nodeKey) {
             graph.setNodeAttribute(key, 'color', '#726780')
           } else {
@@ -44,12 +43,11 @@ const ClickEvents = React.memo(function ClickEvents({ onNodeClick }: { onNodeCli
           }
         })
       },
-      leaveNode: (e) => {
-        const nodeKey = e.node
-        graph.forEachNode((key, attributes) => {
+      leaveNode: () => {
+        graph.forEachNode((key) => {
           graph.setNodeAttribute(key, 'color', '#826C7F')
         })
-        graph.forEachEdge((key, _, source) => {
+        graph.forEachEdge((key) => {
           graph.setEdgeAttribute(key, 'color', '#548687')
           graph.setEdgeAttribute(key, 'size', 1)
         })
