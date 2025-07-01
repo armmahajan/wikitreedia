@@ -6,6 +6,7 @@ import Graph from "graphology";
 import { SigmaContainer, useSigma, useLoadGraph, useRegisterEvents } from "@react-sigma/core";
 import { useWorkerLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import "@react-sigma/core/lib/style.css";
+import { useLocation } from 'react-router'
 
 import { fetchArticleLinks, fetchTopArticles, fetchWikiSearchResults } from './api/wikipediaApi.ts'
 import { customDrawHover } from './renderers/drawHover.ts'
@@ -47,6 +48,15 @@ function App() {
   const [searchResults, setSearchResults] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [previewArticle, setPreviewArticle] = useState<string>('')
+
+  // Check if we were provided with an article from homepage
+  const location = useLocation()
+  useEffect(() => {
+    if (location.state?.article) {
+      setSelectedArticle(location.state?.article)
+      console.log('setting article ', location.state?.article)
+    }
+  }, [])
 
   // Update search results
   useEffect(() => {
