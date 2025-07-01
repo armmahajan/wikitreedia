@@ -78,13 +78,13 @@ function App() {
   const [searchResults, setSearchResults] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [previewArticle, setPreviewArticle] = useState<string>('')
+  const [loading, setLoading] = useState(true)
 
   // Check if we were provided with an article from homepage
   const location = useLocation()
   useEffect(() => {
     if (location.state?.article) {
       setSelectedArticle(location.state?.article)
-      console.log('setting article ', location.state?.article)
     }
   }, [])
 
@@ -144,7 +144,11 @@ function App() {
       )
     }
 
-    loadArticles()
+    loadArticles().then(
+      () => {
+        setLoading(false)
+      }
+    )
   }, [selectedArticle])
 
   
@@ -227,10 +231,39 @@ function App() {
   return (
     <div className='w-[100vw] h-[100vh] flex flex-col relative overflow-x-hidden overflow-y-hidden'>
       <WikipediaPreview title={previewArticle}/>
+      {
+        loading &&
+      <div className='flex w-1/12 h-max fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-1000'>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+          <path
+            fill="none"
+            stroke="#548687"
+            strokeWidth={15}
+            strokeLinecap="round"
+            strokeDasharray="300 385"
+            strokeDashoffset={0}
+            d="M275 75c0 31-27 50-50 50-58 0-92-100-150-100-28 0-50 22-50 50s23 50 50 50c58 0 92-100 150-100 24 0 50 19 50 50Z"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              calcMode="spline"
+
+              dur="2s"
+              values="685;-685"
+              keySplines="0 0 1 1"
+              repeatCount="indefinite"
+            />
+          </path>
+        </svg>
+      </div>
+      }
       <div className='flex flex-row gap-1 h-8 justify-center absolute top-5 left-5 z-1000'>
         <Combobox value={selectedArticle} 
           onChange={(value) => {
             setSelectedArticle(value);
+            if (value) {
+              setLoading(true)
+            }
             setLayoutSlowdown(50)
             const graph = graphRef.current
             graph.clear()
