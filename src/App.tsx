@@ -3,6 +3,7 @@ import React from 'react';
 import './App.css'
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import Graph from "graphology";
+import Node from "graphology";
 import { SigmaContainer, useSigma, useLoadGraph, useRegisterEvents } from "@react-sigma/core";
 import { useWorkerLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import "@react-sigma/core/lib/style.css";
@@ -23,6 +24,33 @@ const ClickEvents = React.memo(function ClickEvents({ onNodeClick }: { onNodeCli
         const nodeKey = e.node
         const label = graph.getNodeAttribute(nodeKey, "label")
         onNodeClick(label)
+      },
+      enterNode: (e) => {
+        const nodeKey = e.node
+        graph.forEachNode((key, attributes) => {
+          if (key !== nodeKey) {
+            graph.setNodeAttribute(key, 'color', '#726780')
+          } else {
+            graph.setNodeAttribute(key, 'color', '#548687')
+          }
+        })
+        graph.forEachEdge((key, _, source, target) => {
+          if (source !== nodeKey) {
+            graph.setEdgeAttribute(key, 'color', '#726780')
+          }
+          if (source === nodeKey) {
+            graph.setNodeAttribute(target, 'color', '#548687')
+          }
+        })
+      },
+      leaveNode: (e) => {
+        const nodeKey = e.node
+        graph.forEachNode((key, attributes) => {
+          graph.setNodeAttribute(key, 'color', '#826C7F')
+        })
+        graph.forEachEdge((key, _, source) => {
+          graph.setEdgeAttribute(key, 'color', '#548687')
+        })
       }
     })
   }, [onNodeClick, registerEvents, sigma])
@@ -127,7 +155,9 @@ function App() {
   const addEdge = (origin: string, dest: string) => {
     const graph = graphRef.current
     if (!graph.hasNode(dest)) return
-    graph.addEdge(origin, dest)
+    graph.addEdge(origin, dest, {
+      type: "arrow",
+    })
   }
 
   const addArticleTree = (orig: string, destList: string[], parent: boolean = false) => {
